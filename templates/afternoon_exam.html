@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}午後問題 - PM試験対策{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h3 class="mb-0">午後問題（記述問題）</h3>
+            </div>
+            <div class="card-body">
+                <div id="question-container">
+                    <div class="mb-4">
+                        <h5>【シナリオ】</h5>
+                        <p class="bg-light p-3 rounded">{{ question.scenario }}</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5>【問題】</h5>
+                        <p class="fw-bold">{{ question.question }}</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="answer-text" class="form-label">回答を入力してください:</label>
+                        <textarea class="form-control" id="answer-text" rows="8" 
+                                placeholder="ここに回答を入力してください..."></textarea>
+                        <small class="form-text text-muted">文字数: <span id="char-count">0</span></small>
+                    </div>
+                    
+                    <button class="btn btn-success" onclick="submitAnswer()">回答を提出</button>
+                </div>
+                
+                <div id="result-container" style="display: none;">
+                    <div class="mt-4">
+                        <h5>【あなたの回答】</h5>
+                        <div id="user-answer" class="bg-light p-3 rounded"></div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h5>【解答例】</h5>
+                        <div id="sample-answer" class="bg-info bg-opacity-10 p-3 rounded"></div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h5>自己採点をしてください:</h5>
+                        <div class="btn-group-vertical w-100" role="group">
+                            <input type="radio" class="btn-check" name="self-score" id="score1" value="1">
+                            <label class="btn btn-outline-success" for="score1">1. 優秀 (80-100点)</label>
+                            
+                            <input type="radio" class="btn-check" name="self-score" id="score2" value="2">
+                            <label class="btn btn-outline-primary" for="score2">2. 良好 (60-79点)</label>
+                            
+                            <input type="radio" class="btn-check" name="self-score" id="score3" value="3">
+                            <label class="btn btn-outline-warning" for="score3">3. 普通 (40-59点)</label>
+                            
+                            <input type="radio" class="btn-check" name="self-score" id="score4" value="4">
+                            <label class="btn btn-outline-danger" for="score4">4. 要改善 (0-39点)</label>
+                        </div>
+                        
+                        <button class="btn btn-primary mt-3" onclick="submitSelfScore()">採点結果を保存</button>
+                    </div>
+                    
+                    <div id="final-result" style="display: none;" class="mt-4">
+                        <div class="alert alert-info">
+                            <h5>採点完了</h5>
+                            <p id="score-message"></p>
+                        </div>
+                        <a href="/afternoon" class="btn btn-success me-2">もう一度挑戦</a>
+                        <a href="/" class="btn btn-secondary">ホームに戻る</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let userAnswerText = '';
+
+// 文字数カウント
+document.getElementById('answer-text').addEventListener('input', function() {
+    const charCount = this.value.length;
+    document.getElementById('char-count').textContent = charCount;
+});
+
+function submitAnswer() {
+    const answerText = document.getElementById('answer-text').value.trim();
+    
+    if (!answerText) {
+        alert('回答を入力してください。');
+        return;
+    }
+    
+    userAnswerText = answerText;
+    
+    // 回答を表示
+    document.getElementById('user-answer').textContent = answerText;
+    
+    // サーバーから解答例を取得
+    fetch('/submit_afternoon', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            answer: answerText,
+            self_score: 0  // 仮の値
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('sample-answer').textContent = data.sample_answer;
+        document.getElementById('result-container').style.display = 'block';
+        document.getElementById('question-container').style.display = 'none';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+function submitSelfScore() {
+    const selectedScore = document.querySelector('input[name="self-score"]:checked');
+    
+    if (!selectedScore) {
+        alert('自己採点を選択してください。');
+        return;
+    }
+    
+    const selfScore = parseInt(selectedScore.value);
+    
+    fetch('/submit_afternoon', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            answer: userAnswerText,
+            self_score: selfScore
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        const scoreMessages = {
+            1: '優秀な回答です！',
+            2: '良好な回答です。',
+            3: '普通の回答です。もう少し詳しく書けるとよいでしょう。',
+            4: '要改善です。解答例を参考に復習しましょう。'
+        };
+        
+        document.getElementById('score-message').innerHTML = 
+            `${scoreMessages[selfScore]}<br>スコア: ${data.score}点`;
+        document.getElementById('final-result').style.display = 'block';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+</script>
+{% endblock %}

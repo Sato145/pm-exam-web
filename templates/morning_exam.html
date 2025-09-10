@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}午前問題 - PM試験対策{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">午前問題（4択問題）</h3>
+                <small>問題 <span id="question-num">{{ question_num }}</span> / {{ total }}</small>
+            </div>
+            <div class="card-body">
+                <div id="question-container">
+                    <h5 id="question-text">Q{{ question.id }}: {{ question.question }}</h5>
+                    
+                    <div id="choices-container" class="mt-4">
+                        {% for choice in question.choices %}
+                        <button class="btn btn-outline-secondary choice-btn w-100" 
+                                onclick="selectAnswer({{ loop.index0 }})" 
+                                id="choice-{{ loop.index0 }}">
+                            {{ loop.index }}. {{ choice }}
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div id="result-container" style="display: none;">
+                    <div id="result-message" class="alert mt-4"></div>
+                    <div id="explanation" class="explanation"></div>
+                    <button id="next-btn" class="btn btn-primary mt-3" onclick="nextQuestion()">次の問題</button>
+                    <div id="final-result" style="display: none;" class="mt-4">
+                        <div class="alert alert-info">
+                            <h5>結果</h5>
+                            <p id="score-text"></p>
+                        </div>
+                        <a href="/morning" class="btn btn-success me-2">もう一度挑戦</a>
+                        <a href="/" class="btn btn-secondary">ホームに戻る</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentQuestionData = null;
+
+function selectAnswer(answerIndex) {
+    // 選択肢ボタンを無効化
+    const choiceButtons = document.querySelectorAll('.choice-btn');
+    choiceButtons.forEach(btn => btn.disabled = true);
+    
+    // 選択した答えをハイライト
+    document.getElementById(`choice-${answerIndex}`).classList.add('btn-warning');
+    
+    // サーバーに回答を送信
+    fetch('/submit_answer', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            answer: answerIndex
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        showResult(data, answerIndex);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+function showResult(data, selectedAnswer) {
+    const resultContainer = document.getElementById('result-container');
+    const resultMessage = document.getElementById('result-message');
+    const explanation = document.getElementById('explanation');
+    const nextBtn = document.getElementById('next-btn');
+    
+    // 正解の選択肢をハイライト
+    const correctChoice = document.getElementById(`choice-${data.correct_answer}`);
+    correctChoice.classList.remove('btn-outline-secondary');
+    correctChoice.classList.add('btn-success');
+    
+    // 不正解の場合、選択した答えを赤でハイライト
+    if (!data.correct) {
+        const selectedChoice = document.getElementById(`choice-${selectedAnswer}`);
+        selectedChoice.classList.remove('btn-warning');
+        selectedChoice.classList.add('btn-danger');
+    } else {
+        const selectedChoice = document.getElementById(`choice-${selectedAnswer}`);
+        selectedChoice.classList.remove('btn-warning');
+        selectedChoice.classList.add('btn-success');
+    }
+    
+    // 結果メッセージを表示
+    if (data.correct) {
+        resultMessage.className = 'alert alert-success mt-4';
+        resultMessage.innerHTML = '✓ 正解！';
+    } else {
+        resultMessage.className = 'alert alert-danger mt-4';
+        resultMessage.innerHTML = '✗ 不正解';
+    }
+    
+    explanation.innerHTML = `<strong>解説:</strong> ${data.explanation}`;
+    
+    if (data.has_next) {
+        nextBtn.style.display = 'block';
+        currentQuestionData = data;
+    } else {
+        nextBtn.style.display = 'none';
+        showFinalResult(data.final_score);
+    }
+    
+    resultContainer.style.display = 'block';
+}
+
+function nextQuestion() {
+    if (!currentQuestionData || !currentQuestionData.next_question) return;
+    
+    const question = currentQuestionData.next_question;
+    
+    // 問題を更新
+    document.getElementById('question-text').innerHTML = `Q${question.id}: ${question.question}`;
+    document.getElementById('question-num').textContent = currentQuestionData.question_num;
+    
+    // 選択肢を更新
+    const choicesContainer = document.getElementById('choices-container');
+    choicesContainer.innerHTML = '';
+    
+    question.choices.forEach((choice, index) => {
+        const button = document.createElement('button');
+        button.className = 'btn btn-outline-secondary choice-btn w-100';
+        button.onclick = () => selectAnswer(index);
+        button.id = `choice-${index}`;
+        button.innerHTML = `${index + 1}. ${choice}`;
+        choicesContainer.appendChild(button);
+    });
+    
+    // 結果コンテナを非表示
+    document.getElementById('result-container').style.display = 'none';
+}
+
+function showFinalResult(scoreData) {
+    const finalResult = document.getElementById('final-result');
+    const scoreText = document.getElementById('score-text');
+    
+    scoreText.innerHTML = `${scoreData.correct}/${scoreData.total}問正解 (${scoreData.percentage.toFixed(1)}%)`;
+    finalResult.style.display = 'block';
+}
+</script>
+{% endblock %}

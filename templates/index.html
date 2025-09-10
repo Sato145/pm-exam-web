@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h2 class="mb-0">プロジェクトマネージャー試験対策システム</h2>
+            </div>
+            <div class="card-body">
+                <p class="lead">高度情報処理技術者試験のプロジェクトマネージャー試験対策を行いましょう。</p>
+                
+                <div class="row mt-4">
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">午前問題</h5>
+                                <p class="card-text">4択問題でプロジェクトマネジメントの基礎知識を確認</p>
+                                <a href="/morning" class="btn btn-primary">開始する</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">午後問題</h5>
+                                <p class="card-text">記述問題で実践的な思考力を鍛える</p>
+                                <a href="/afternoon" class="btn btn-success">開始する</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">成績確認</h5>
+                                <p class="card-text">これまでの学習履歴と成績を確認</p>
+                                <a href="/scores" class="btn btn-info">確認する</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <h5>学習のポイント</h5>
+                    <ul>
+                        <li>午前問題で基礎知識を固める</li>
+                        <li>午後問題で実践的な思考力を鍛える</li>
+                        <li>定期的に成績を確認して弱点を把握</li>
+                        <li>計算問題（PERT、EVM等）は繰り返し練習</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
