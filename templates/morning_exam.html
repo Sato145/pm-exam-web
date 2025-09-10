@@ -150,6 +150,10 @@ function showFinalResult(scoreData) {
     const scoreText = document.getElementById('score-text');
     
     scoreText.innerHTML = `${scoreData.correct}/${scoreData.total}問正解 (${scoreData.percentage.toFixed(1)}%)`;
+    
+    // LocalStorageに成績を保存
+    saveScore('午前', scoreData.percentage);
+    
     finalResult.style.display = 'block';
 }
 </script>

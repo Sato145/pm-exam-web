@@ -2195,30 +2195,11 @@ def view_scores():
     return render_template('scores.html', scores=scores)
 
 def save_score(question_type, score):
-    """成績を保存"""
-    scores_file = 'scores.json'
-    scores = []
-    
-    if os.path.exists(scores_file):
-        with open(scores_file, 'r', encoding='utf-8') as f:
-            scores = json.load(f)
-    
-    record = {
-        "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
-        "type": question_type,
-        "score": score
-    }
-    scores.append(record)
-    
-    with open(scores_file, 'w', encoding='utf-8') as f:
-        json.dump(scores, f, ensure_ascii=False, indent=2)
+    """成績を保存（LocalStorage使用のためサーバー側では処理しない）"""
+    pass
 
 def load_scores():
-    """成績を読み込み"""
-    scores_file = 'scores.json'
-    if os.path.exists(scores_file):
-        with open(scores_file, 'r', encoding='utf-8') as f:
-            return json.load(f)
+    """成績を読み込み（LocalStorage使用のためサーバー側では空を返す）"""
     return []
 
 if __name__ == '__main__':

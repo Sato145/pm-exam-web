@@ -50,6 +50,32 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- LocalStorage成績管理 -->
+    <script>
+        // 成績をLocalStorageに保存
+        function saveScore(type, score) {
+            const scores = JSON.parse(localStorage.getItem('pmExamScores') || '[]');
+            const record = {
+                date: new Date().toLocaleString('ja-JP'),
+                type: type,
+                score: score
+            };
+            scores.push(record);
+            localStorage.setItem('pmExamScores', JSON.stringify(scores));
+        }
+        
+        // 成績をLocalStorageから読み込み
+        function loadScores() {
+            return JSON.parse(localStorage.getItem('pmExamScores') || '[]');
+        }
+        
+        // 成績をクリア
+        function clearScores() {
+            localStorage.removeItem('pmExamScores');
+        }
+    </script>
+    
     {% block scripts %}{% endblock %}
 </body>
 </html>

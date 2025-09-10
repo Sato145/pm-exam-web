@@ -6,112 +6,149 @@
 <div class="row justify-content-center">
     <div class="col-md-10">
         <div class="card">
-            <div class="card-header bg-info text-white">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
                 <h3 class="mb-0">成績履歴</h3>
+                <button class="btn btn-outline-light btn-sm" onclick="clearAllScores()">成績をクリア</button>
             </div>
             <div class="card-body">
-                {% if scores %}
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>日時</th>
-                                    <th>問題種別</th>
-                                    <th>スコア</th>
-                                    <th>評価</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for score in scores[-20:] %}
-                                <tr>
-                                    <td>{{ score.date }}</td>
-                                    <td>
-                                        <span class="badge {% if score.type == '午前' %}bg-primary{% else %}bg-success{% endif %}">
-                                            {{ score.type }}
-                                        </span>
-                                    </td>
-                                    <td>{{ "%.1f"|format(score.score) }}%</td>
-                                    <td>
-                                        {% if score.score >= 80 %}
-                                            <span class="badge bg-success">優秀</span>
-                                        {% elif score.score >= 60 %}
-                                            <span class="badge bg-primary">良好</span>
-                                        {% elif score.score >= 40 %}
-                                            <span class="badge bg-warning">普通</span>
-                                        {% else %}
-                                            <span class="badge bg-danger">要改善</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <div class="row mt-4">
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-body text-center">
-                                    <h5 class="card-title">午前問題</h5>
-                                    {% set morning_scores = scores | selectattr("type", "equalto", "午前") | list %}
-                                    {% if morning_scores %}
-                                        {% set avg_morning = (morning_scores | sum(attribute="score")) / (morning_scores | length) %}
-                                        <p class="card-text">
-                                            <strong>平均スコア: {{ "%.1f"|format(avg_morning) }}%</strong><br>
-                                            受験回数: {{ morning_scores | length }}回
-                                        </p>
-                                        <div class="progress">
-                                            <div class="progress-bar {% if avg_morning >= 60 %}bg-success{% elif avg_morning >= 40 %}bg-warning{% else %}bg-danger{% endif %}" 
-                                                 style="width: {{ avg_morning }}%">
-                                                {{ "%.1f"|format(avg_morning) }}%
-                                            </div>
-                                        </div>
-                                    {% else %}
-                                        <p class="card-text text-muted">まだ受験していません</p>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-body text-center">
-                                    <h5 class="card-title">午後問題</h5>
-                                    {% set afternoon_scores = scores | selectattr("type", "equalto", "午後") | list %}
-                                    {% if afternoon_scores %}
-                                        {% set avg_afternoon = (afternoon_scores | sum(attribute="score")) / (afternoon_scores | length) %}
-                                        <p class="card-text">
-                                            <strong>平均スコア: {{ "%.1f"|format(avg_afternoon) }}%</strong><br>
-                                            受験回数: {{ afternoon_scores | length }}回
-                                        </p>
-                                        <div class="progress">
-                                            <div class="progress-bar {% if avg_afternoon >= 60 %}bg-success{% elif avg_afternoon >= 40 %}bg-warning{% else %}bg-danger{% endif %}" 
-                                                 style="width: {{ avg_afternoon }}%">
-                                                {{ "%.1f"|format(avg_afternoon) }}%
-                                            </div>
-                                        </div>
-                                    {% else %}
-                                        <p class="card-text text-muted">まだ受験していません</p>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-4 text-center">
-                        <a href="/morning" class="btn btn-primary me-2">午前問題に挑戦</a>
-                        <a href="/afternoon" class="btn btn-success me-2">午後問題に挑戦</a>
-                        <a href="/" class="btn btn-secondary">ホームに戻る</a>
-                    </div>
-                {% else %}
-                    <div class="text-center">
-                        <p class="lead">まだ成績データがありません。</p>
-                        <p>問題に挑戦して学習を始めましょう！</p>
-                        <a href="/morning" class="btn btn-primary me-2">午前問題</a>
-                        <a href="/afternoon" class="btn btn-success">午後問題</a>
-                    </div>
-                {% endif %}
+                <div id="scoresContent">
+                    <!-- JavaScriptで動的に生成 -->
+                </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function displayScores() {
+    const scores = loadScores();
+    const content = document.getElementById('scoresContent');
+    
+    if (scores.length === 0) {
+        content.innerHTML = `
+            <div class="text-center">
+                <p class="lead">まだ成績データがありません。</p>
+                <p>問題に挑戦して学習を始めましょう！</p>
+                <a href="/morning" class="btn btn-primary me-2">午前問題</a>
+                <a href="/afternoon" class="btn btn-success">午後問題</a>
+            </div>
+        `;
+        return;
+    }
+    
+    // 最新20件を表示
+    const recentScores = scores.slice(-20);
+    
+    let tableHtml = `
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>日時</th>
+                        <th>問題種別</th>
+                        <th>スコア</th>
+                        <th>評価</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    recentScores.forEach(score => {
+        const badgeClass = score.type === '午前' ? 'bg-primary' : 'bg-success';
+        let evalBadge = '';
+        if (score.score >= 80) evalBadge = '<span class="badge bg-success">優秀</span>';
+        else if (score.score >= 60) evalBadge = '<span class="badge bg-primary">良好</span>';
+        else if (score.score >= 40) evalBadge = '<span class="badge bg-warning">普通</span>';
+        else evalBadge = '<span class="badge bg-danger">要改善</span>';
+        
+        tableHtml += `
+            <tr>
+                <td>${score.date}</td>
+                <td><span class="badge ${badgeClass}">${score.type}</span></td>
+                <td>${score.score.toFixed(1)}%</td>
+                <td>${evalBadge}</td>
+            </tr>
+        `;
+    });
+    
+    tableHtml += `
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    // 統計情報
+    const morningScores = scores.filter(s => s.type === '午前');
+    const afternoonScores = scores.filter(s => s.type === '午後');
+    
+    const avgMorning = morningScores.length > 0 ? 
+        morningScores.reduce((sum, s) => sum + s.score, 0) / morningScores.length : 0;
+    const avgAfternoon = afternoonScores.length > 0 ? 
+        afternoonScores.reduce((sum, s) => sum + s.score, 0) / afternoonScores.length : 0;
+    
+    const statsHtml = `
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">午前問題</h5>
+                        ${morningScores.length > 0 ? `
+                            <p class="card-text">
+                                <strong>平均スコア: ${avgMorning.toFixed(1)}%</strong><br>
+                                受験回数: ${morningScores.length}回
+                            </p>
+                            <div class="progress">
+                                <div class="progress-bar ${avgMorning >= 60 ? 'bg-success' : avgMorning >= 40 ? 'bg-warning' : 'bg-danger'}" 
+                                     style="width: ${avgMorning}%">
+                                    ${avgMorning.toFixed(1)}%
+                                </div>
+                            </div>
+                        ` : '<p class="card-text text-muted">まだ受験していません</p>'}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">午後問題</h5>
+                        ${afternoonScores.length > 0 ? `
+                            <p class="card-text">
+                                <strong>平均スコア: ${avgAfternoon.toFixed(1)}%</strong><br>
+                                受験回数: ${afternoonScores.length}回
+                            </p>
+                            <div class="progress">
+                                <div class="progress-bar ${avgAfternoon >= 60 ? 'bg-success' : avgAfternoon >= 40 ? 'bg-warning' : 'bg-danger'}" 
+                                     style="width: ${avgAfternoon}%">
+                                    ${avgAfternoon.toFixed(1)}%
+                                </div>
+                            </div>
+                        ` : '<p class="card-text text-muted">まだ受験していません</p>'}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-4 text-center">
+            <a href="/morning" class="btn btn-primary me-2">午前問題に挑戦</a>
+            <a href="/afternoon" class="btn btn-success me-2">午後問題に挑戦</a>
+            <a href="/" class="btn btn-secondary">ホームに戻る</a>
+        </div>
+    `;
+    
+    content.innerHTML = tableHtml + statsHtml;
+}
+
+function clearAllScores() {
+    if (confirm('すべての成績データを削除しますか？この操作は取り消せません。')) {
+        clearScores();
+        displayScores();
+        alert('成績データを削除しました。');
+    }
+}
+
+// ページ読み込み時に成績を表示
+document.addEventListener('DOMContentLoaded', displayScores);
+</script>
 {% endblock %}

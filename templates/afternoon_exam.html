@@ -152,6 +152,10 @@ function submitSelfScore() {
         
         document.getElementById('score-message').innerHTML = 
             `${scoreMessages[selfScore]}<br>スコア: ${data.score}点`;
+        
+        // LocalStorageに成績を保存
+        saveScore('午後', data.score);
+        
         document.getElementById('final-result').style.display = 'block';
     })
     .catch(error => {
