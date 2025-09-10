@@ -22,12 +22,12 @@
 
 {% block scripts %}
 <script>
-function displayScores() {
-    const scores = loadScores();
-    const content = document.getElementById('scoresContent');
-    
-    if (scores.length === 0) {
-        content.innerHTML = `
+    function displayScores() {
+        const scores = loadScores();
+        const content = document.getElementById('scoresContent');
+
+        if (scores.length === 0) {
+            content.innerHTML = `
             <div class="text-center">
                 <p class="lead">まだ成績データがありません。</p>
                 <p>問題に挑戦して学習を始めましょう！</p>
@@ -35,13 +35,13 @@ function displayScores() {
                 <a href="/afternoon" class="btn btn-success">午後問題</a>
             </div>
         `;
-        return;
-    }
-    
-    // 最新20件を表示
-    const recentScores = scores.slice(-20);
-    
-    let tableHtml = `
+            return;
+        }
+
+        // 最新20件を表示
+        const recentScores = scores.slice(-20);
+
+        let tableHtml = `
         <div class="table-responsive">
             <table class="table table-striped">
                 <thead>
@@ -54,16 +54,16 @@ function displayScores() {
                 </thead>
                 <tbody>
     `;
-    
-    recentScores.forEach(score => {
-        const badgeClass = score.type === '午前' ? 'bg-primary' : 'bg-success';
-        let evalBadge = '';
-        if (score.score >= 80) evalBadge = '<span class="badge bg-success">優秀</span>';
-        else if (score.score >= 60) evalBadge = '<span class="badge bg-primary">良好</span>';
-        else if (score.score >= 40) evalBadge = '<span class="badge bg-warning">普通</span>';
-        else evalBadge = '<span class="badge bg-danger">要改善</span>';
-        
-        tableHtml += `
+
+        recentScores.forEach(score => {
+            const badgeClass = score.type === '午前' ? 'bg-primary' : 'bg-success';
+            let evalBadge = '';
+            if (score.score >= 80) evalBadge = '<span class="badge bg-success">優秀</span>';
+            else if (score.score >= 60) evalBadge = '<span class="badge bg-primary">良好</span>';
+            else if (score.score >= 40) evalBadge = '<span class="badge bg-warning">普通</span>';
+            else evalBadge = '<span class="badge bg-danger">要改善</span>';
+
+            tableHtml += `
             <tr>
                 <td>${score.date}</td>
                 <td><span class="badge ${badgeClass}">${score.type}</span></td>
@@ -71,24 +71,24 @@ function displayScores() {
                 <td>${evalBadge}</td>
             </tr>
         `;
-    });
-    
-    tableHtml += `
+        });
+
+        tableHtml += `
                 </tbody>
             </table>
         </div>
     `;
-    
-    // 統計情報
-    const morningScores = scores.filter(s => s.type === '午前');
-    const afternoonScores = scores.filter(s => s.type === '午後');
-    
-    const avgMorning = morningScores.length > 0 ? 
-        morningScores.reduce((sum, s) => sum + s.score, 0) / morningScores.length : 0;
-    const avgAfternoon = afternoonScores.length > 0 ? 
-        afternoonScores.reduce((sum, s) => sum + s.score, 0) / afternoonScores.length : 0;
-    
-    const statsHtml = `
+
+        // 統計情報
+        const morningScores = scores.filter(s => s.type === '午前');
+        const afternoonScores = scores.filter(s => s.type === '午後');
+
+        const avgMorning = morningScores.length > 0 ?
+            morningScores.reduce((sum, s) => sum + s.score, 0) / morningScores.length : 0;
+        const avgAfternoon = afternoonScores.length > 0 ?
+            afternoonScores.reduce((sum, s) => sum + s.score, 0) / afternoonScores.length : 0;
+
+        const statsHtml = `
         <div class="row mt-4">
             <div class="col-md-6">
                 <div class="card">
@@ -136,19 +136,19 @@ function displayScores() {
             <a href="/" class="btn btn-secondary">ホームに戻る</a>
         </div>
     `;
-    
-    content.innerHTML = tableHtml + statsHtml;
-}
 
-function clearAllScores() {
-    if (confirm('すべての成績データを削除しますか？この操作は取り消せません。')) {
-        clearScores();
-        displayScores();
-        alert('成績データを削除しました。');
+        content.innerHTML = tableHtml + statsHtml;
     }
-}
 
-// ページ読み込み時に成績を表示
-document.addEventListener('DOMContentLoaded', displayScores);
+    function clearAllScores() {
+        if (confirm('すべての成績データを削除しますか？この操作は取り消せません。')) {
+            clearScores();
+            displayScores();
+            alert('成績データを削除しました。');
+        }
+    }
+
+    // ページ読み込み時に成績を表示
+    document.addEventListener('DOMContentLoaded', displayScores);
 </script>
 {% endblock %}
