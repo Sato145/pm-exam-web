@@ -4256,14 +4256,20 @@ class PMExamData:
         try:
             from additional_questions import additional_questions
             self.morning_questions.extend(additional_questions)
-        except ImportError:
-            pass
+            print(f"Loaded {len(additional_questions)} questions from additional_questions.py")
+        except ImportError as e:
+            print(f"Warning: Could not load additional_questions.py: {e}")
+        except Exception as e:
+            print(f"Error loading additional_questions.py: {e}")
             
         try:
             from additional_questions_2 import additional_questions_2
             self.morning_questions.extend(additional_questions_2)
-        except ImportError:
-            pass
+            print(f"Loaded {len(additional_questions_2)} questions from additional_questions_2.py")
+        except ImportError as e:
+            print(f"Warning: Could not load additional_questions_2.py: {e}")
+        except Exception as e:
+            print(f"Error loading additional_questions_2.py: {e}")
         
         self.afternoon_questions = [
             {
@@ -4280,7 +4286,16 @@ class PMExamData:
             }
         ]
 
-exam_data = PMExamData()
+# データの遅延読み込み
+exam_data = None
+
+def get_exam_data():
+    global exam_data
+    if exam_data is None:
+        print("Initializing exam data...")
+        exam_data = PMExamData()
+        print(f"Exam data initialized with {len(exam_data.morning_questions)} questions")
+    return exam_data
 
 @app.route('/')
 def index():
@@ -4289,7 +4304,8 @@ def index():
 @app.route('/morning')
 def morning_exam():
     # セッションに問題を保存
-    questions = random.sample(exam_data.morning_questions, min(5, len(exam_data.morning_questions)))
+    data = get_exam_data()
+    questions = random.sample(data.morning_questions, min(5, len(data.morning_questions)))
     session['current_questions'] = questions
     session['current_question_index'] = 0
     session['correct_answers'] = 0
@@ -4343,7 +4359,8 @@ def submit_answer():
 
 @app.route('/afternoon')
 def afternoon_exam():
-    question = random.choice(exam_data.afternoon_questions)
+    data = get_exam_data()
+    question = random.choice(data.afternoon_questions)
     session['current_afternoon_question'] = question
     return render_template('afternoon_exam.html', question=question)
 
@@ -4381,4 +4398,12 @@ def load_scores():
 if __name__ == '__main__':
     import os
     port = int(os.environ.get('PORT', 8080))
-    app.run(debug=False, host='0.0.0.0', port=port)
+    # Renderでの起動最適化
+    try:
+        print("Starting PM Exam Web Application...")
+        # データの初期化は遅延読み込みで行う
+        app.run(debug=False, host='0.0.0.0', port=port, threaded=True)
+    except Exception as e:
+        print(f"Error starting application: {e}")
+        import traceback
+        traceback.print_exc()
